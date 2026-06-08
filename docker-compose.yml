@@ -1,0 +1,47 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_DB: moodle
+      POSTGRES_USER: moodle
+      POSTGRES_PASSWORD: moodle
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - moodle-network
+
+  moodle:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "${MOODLE_PORT:-8080}:80"
+    environment:
+      MOODLE_DATABASE_TYPE: pgsql
+      MOODLE_DATABASE_HOST: postgres
+      MOODLE_DATABASE_NAME: moodle
+      MOODLE_DATABASE_USER: moodle
+      MOODLE_DATABASE_PASSWORD: moodle
+      MOODLE_ADMIN_USER: admin
+      MOODLE_ADMIN_PASSWORD: Admin123!
+      MOODLE_SITE_NAME: "${MOODLE_SITE_NAME:-Moodle Sandbox}"
+      MOODLE_SITE_URL: "http://localhost:${MOODLE_PORT:-8080}"
+    volumes:
+      - moodle_data:/var/www/moodledata
+      - ./themes:/var/www/html/theme/custom
+      - ./customer-themes:/var/www/html/theme/customer
+      - ./config:/moodle-config
+    depends_on:
+      - postgres
+    networks:
+      - moodle-network
+
+volumes:
+  postgres_data:
+  moodle_data:
+
+networks:
+  moodle-network:
+    driver: bridge
